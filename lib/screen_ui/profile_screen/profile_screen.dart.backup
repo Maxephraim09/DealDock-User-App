@@ -1,0 +1,967 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../controllers/my_profile_controller.dart';
+import '../../controllers/wallet_controller.dart';
+import '../../service/fire_store_utils.dart';
+import '../../themes/app_them_data.dart';
+import '../location_enable_screens/address_list_screen.dart';
+import '../multi_vendor_service/chat_screens/chat_screen.dart';
+import '../multi_vendor_service/order_list_screen/order_screen.dart';
+import '../multi_vendor_service/wallet_screen/wallet_screen.dart';
+
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final MyProfileController _myProfileController = Get.put(MyProfileController());
+  final WalletController _walletController = Get.put(WalletController());
+
+  bool _isBalanceVisible = true;
+  bool _isBiometricsEnabled = true;
+  bool _isNotificationsEnabled = true;
+
+  void _toggleBalanceVisibility() {
+    setState(() {
+      _isBalanceVisible = !_isBalanceVisible;
+    });
+  }
+
+  void _toggleBiometrics(bool value) {
+    setState(() {
+      _isBiometricsEnabled = value;
+    });
+  }
+
+  void _toggleNotifications(bool value) {
+    setState(() {
+      _isNotificationsEnabled = value;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppThemeData.surface,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Obx(() {
+                final user = Constant.userModel;
+                return ProfileHeaderWidget(
+                  fullName: user?.fullName() ?? 'User',
+                  contactText: user?.phoneNumber != null ? '${user?.countryCode ?? ''} ${user?.phoneNumber}' : 'Not provided',
+                  kycLevel: user?.isDocumentVerify == true ? 'Verified' : 'Unverified',
+                  profileImageUrl: user?.profilePictureURL,
+                );
+              }),
+              const SizedBox(height: 16),
+              Obx(() {
+                final walletAmount = Constant.userModel?.walletAmount ?? 0.0;
+                return WalletCardWidget(
+                  balance: walletAmount.toStringAsFixed(2),
+                  isVisible: _isBalanceVisible,
+                  onToggleVisibility: _toggleBalanceVisibility,
+                  onTap: () => Get.to(() => const WalletScreen()),
+                );
+              }),
+              const SizedBox(height: 24),
+              const SectionHeaderWidget(title: 'Quick Actions'),
+              const SizedBox(height: 12),
+              ActionGridWidget(
+                onOrdersTap: () => Get.to(() => const OrderScreen()),
+                onWalletTap: () => Get.to(() => const WalletScreen()),
+                onAddressesTap: () => Get.to(() => const AddressListScreen()),
+                onSupportTap: () => Get.to(() => const ChatScreen()),
+              ),
+              const SizedBox(height: 24),
+              const SectionHeaderWidget(title: 'Service Management'),
+              const SizedBox(height: 12),
+              ServiceManagementSection(
+                onManageAddresses: () => Get.to(() => const AddressListScreen()),
+                onOrderHistory: () => Get.to(() => const OrderScreen()),
+                onPaymentMethods: () {}, // TODO: Implement payment methods screen
+              ),
+              const SizedBox(height: 24),
+              const SectionHeaderWidget(title: 'Security Settings'),
+              const SizedBox(height: 12),
+              SecuritySettingsSection(
+                isBiometricsEnabled: _isBiometricsEnabled,
+                isNotificationsEnabled: _isNotificationsEnabled,
+                onBiometricsToggle: _toggleBiometrics,
+                onNotificationsToggle: _toggleNotifications,
+              ),
+              const SizedBox(height: 24),
+              const SectionHeaderWidget(title: 'Payment Methods'),
+              const SizedBox(height: 12),
+              PaymentMethodsSection(
+                onAddMethod: () {}, // TODO: Implement add payment method
+              ),
+              const SizedBox(height: 24),
+              const SectionHeaderWidget(title: 'Rewards & Benefits'),
+              const SizedBox(height: 12),
+              const RewardsSection(),
+              const SizedBox(height: 24),
+              const SectionHeaderWidget(title: 'Support & Help'),
+              const SizedBox(height: 12),
+              SupportSection(
+                onContactSupport: () => Get.to(() => const ChatScreen()),
+                onFAQ: () {}, // TODO: Implement FAQ screen
+                onHelpCenter: () {}, // TODO: Implement help center
+              ),
+              const SizedBox(height: 24),
+              const SectionHeaderWidget(title: 'Preferences'),
+              const SizedBox(height: 12),
+              PreferencesSection(
+                isDarkMode: _myProfileController.isDarkModeSwitch.value,
+                onDarkModeToggle: _myProfileController.toggleDarkMode,
+              ),
+              const SizedBox(height: 24),
+              const SectionHeaderWidget(title: 'Legal & Compliance'),
+              const SizedBox(height: 12),
+              LegalSection(
+                onPrivacyPolicy: () {}, // TODO: Implement privacy policy
+                onTermsOfService: () {}, // TODO: Implement terms of service
+                onAbout: () {}, // TODO: Implement about screen
+              ),
+              const SizedBox(height: 24),
+              LogoutButtonWidget(
+                onLogout: () async {
+                  // TODO: Implement logout logic
+                  await FireStoreUtils.firebaseSignOut();
+                  Get.offAllNamed('/login'); // Adjust route as needed
+                },
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+                isVisible: _isBalanceVisible,
+                onToggleVisibility: _toggleBalanceVisibility,
+                balanceText: '₦ 56,450.00',
+              ),
+              const SizedBox(height: 16),
+              const SectionHeaderWidget(
+                title: 'Quick Actions',
+                subtitle: 'Common account tasks in one tap',
+              ),
+              const SizedBox(height: 12),
+              const ActionGridWidget(),
+              const SizedBox(height: 20),
+              const SectionHeaderWidget(
+                title: 'Security & Account Settings',
+                subtitle: 'Protect your wallet and personal data',
+              ),
+              const SizedBox(height: 12),
+              SettingsTileWidget(
+                icon: Icons.lock_outline,
+                title: 'Change PIN / Password',
+                subtitle: 'Update your login security',
+                onTap: () {},
+              ),
+              SettingsTileWidget(
+                icon: Icons.fingerprint,
+                title: 'Enable Biometrics',
+                subtitle: 'Use fingerprint or face unlock',
+                trailing: Switch(
+                  value: _isBiometricsEnabled,
+                  activeThumbColor: AppThemeData.brandPrimaryBlue,
+                  onChanged: _toggleBiometrics,
+                ),
+              ),
+              SettingsTileWidget(
+                icon: Icons.shield_outlined,
+                title: 'Two-Factor Authentication',
+                subtitle: 'Extra verification for every login',
+                onTap: () {},
+              ),
+              SettingsTileWidget(
+                icon: Icons.devices,
+                title: 'Device Management',
+                subtitle: 'Review active devices',
+                onTap: () {},
+              ),
+              SettingsTileWidget(
+                icon: Icons.logout,
+                title: 'Logout',
+                subtitle: 'Securely sign out of your account',
+                onTap: () {},
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              ),
+              const SizedBox(height: 20),
+              const SectionHeaderWidget(
+                title: 'Payment Methods',
+                subtitle: 'Linked bank accounts and cards',
+              ),
+              const SizedBox(height: 12),
+              PaymentMethodsSection(onAddMethod: () {}),
+              const SizedBox(height: 20),
+              const SectionHeaderWidget(
+                title: 'Rewards & Cashback',
+                subtitle: 'Track your earnings and referrals',
+              ),
+              const SizedBox(height: 12),
+              const RewardsSection(),
+              const SizedBox(height: 20),
+              const SectionHeaderWidget(
+                title: 'Support',
+                subtitle: 'Get help whenever you need it',
+              ),
+              const SizedBox(height: 12),
+              SettingsTileWidget(
+                icon: Icons.help_outline,
+                title: 'Help Center',
+                subtitle: 'Frequently asked questions',
+                onTap: () {},
+              ),
+              SettingsTileWidget(
+                icon: Icons.phone_in_talk_outlined,
+                title: 'Contact Support',
+                subtitle: 'Chat or call support',
+                onTap: () {},
+              ),
+              SettingsTileWidget(
+                icon: Icons.report_problem_outlined,
+                title: 'Report Issue',
+                subtitle: 'Submit a transaction dispute',
+                onTap: () {},
+              ),
+              const SizedBox(height: 20),
+              const SectionHeaderWidget(
+                title: 'Preferences',
+                subtitle: 'Customize your app experience',
+              ),
+              const SizedBox(height: 12),
+              SettingsTileWidget(
+                icon: Icons.notifications_active_outlined,
+                title: 'Notification Settings',
+                trailing: Switch(
+                  value: _isNotificationsEnabled,
+                  activeThumbColor: AppThemeData.brandPrimaryBlue,
+                  onChanged: _toggleNotifications,
+                ),
+                onTap: () {},
+              ),
+              SettingsTileWidget(
+                icon: Icons.language,
+                title: 'Language',
+                subtitle: 'English',
+                onTap: () {},
+              ),
+              SettingsTileWidget(
+                icon: Icons.dark_mode_outlined,
+                title: 'Theme',
+                subtitle: 'Light mode',
+                onTap: () {},
+              ),
+              const SizedBox(height: 20),
+              const SectionHeaderWidget(
+                title: 'Legal',
+                subtitle: 'Review our terms and privacy policies',
+              ),
+              const SizedBox(height: 12),
+              LegalLinkWidget(title: 'Terms of Service', onTap: () {}),
+              LegalLinkWidget(title: 'Privacy Policy', onTap: () {}),
+              const SizedBox(height: 24),
+              LogoutButtonWidget(onLogout: () {}),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// PROFILE HEADER
+class ProfileHeaderWidget extends StatelessWidget {
+  final String fullName;
+  final String contactText;
+  final String? kycLevel;
+
+  const ProfileHeaderWidget({
+    super.key,
+    required this.fullName,
+    required this.contactText,
+    this.kycLevel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppThemeData.brandDeepBlue,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const CircleAvatar(
+            radius: 30,
+            backgroundColor: Colors.white,
+            child: Icon(
+              Icons.person,
+              color: AppThemeData.brandDeepBlue,
+              size: 30,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  fullName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  contactText,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0x2DFFFFFF),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(
+                            Icons.check_circle,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            'Verified',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (kycLevel != null) ...[
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0x1FFFFFFF),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          kycLevel!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// WALLET SUMMARY CARD
+class WalletCardWidget extends StatelessWidget {
+  final bool isVisible;
+  final VoidCallback onToggleVisibility;
+  final String balanceText;
+
+  const WalletCardWidget({
+    super.key,
+    required this.isVisible,
+    required this.onToggleVisibility,
+    required this.balanceText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0x1F3D5A73),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Available Balance',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              GestureDetector(
+                onTap: onToggleVisibility,
+                child: Icon(
+                  isVisible ? Icons.visibility : Icons.visibility_off,
+                  color: AppThemeData.brandMutedSteelBlue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isVisible ? balanceText : '••••••••',
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppThemeData.brandPrimaryBlue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    'Add Money',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppThemeData.brandPrimaryBlue,
+                    side: const BorderSide(color: Color(0x4230588C)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    'Transfer',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// QUICK ACTIONS GRID
+class ActionGridWidget extends StatelessWidget {
+  const ActionGridWidget({super.key});
+
+  static final List<_ActionItem> _actions = [
+    _ActionItem(
+      icon: Icons.receipt_long_outlined,
+      label: 'Transaction History',
+      color: AppThemeData.brandPrimaryBlue,
+    ),
+    _ActionItem(
+      icon: Icons.credit_card_outlined,
+      label: 'Cards & Banks',
+      color: AppThemeData.brandMutedSteelBlue,
+    ),
+    _ActionItem(
+      icon: Icons.money_off_csred_outlined,
+      label: 'Withdraw',
+      color: AppThemeData.brandPrimaryBlue,
+    ),
+    _ActionItem(
+      icon: Icons.insert_chart_outlined,
+      label: 'Statements',
+      color: AppThemeData.brandMutedSteelBlue,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tileWidth = (constraints.maxWidth - 12) / 2;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children:
+              _actions
+                  .map(
+                    (action) => SizedBox(
+                      width: tileWidth.clamp(0, 300),
+                      child: _ActionTile(item: action),
+                    ),
+                  )
+                  .toList(),
+        );
+      },
+    );
+  }
+}
+
+class _ActionItem {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _ActionItem({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+}
+
+class _ActionTile extends StatelessWidget {
+  final _ActionItem item;
+
+  const _ActionTile({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: item.color.withAlpha(31),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(item.icon, color: item.color, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              item.label,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// SECTION HEADER
+class SectionHeaderWidget extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+
+  const SectionHeaderWidget({super.key, required this.title, this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            subtitle!,
+            style: TextStyle(fontSize: 13, color: AppThemeData.grey600),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// SETTINGS TILE
+class SettingsTileWidget extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  const SettingsTileWidget({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppThemeData.grey100),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppThemeData.grey100,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                icon,
+                color: AppThemeData.brandMutedSteelBlue,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppThemeData.grey600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (trailing != null)
+              trailing!
+            else
+              const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: AppThemeData.grey500,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// PAYMENT METHODS SECTION
+class PaymentMethodsSection extends StatelessWidget {
+  final VoidCallback onAddMethod;
+
+  const PaymentMethodsSection({super.key, required this.onAddMethod});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppThemeData.grey100),
+          ),
+          child: Column(
+            children: [
+              PaymentMethodCard(
+                title: 'Standard Bank',
+                details: 'Savings Account • 0123456789',
+                icon: Icons.account_balance,
+              ),
+              const SizedBox(height: 12),
+              PaymentMethodCard(
+                title: 'Visa Classic',
+                details: '•••• 1245 • Exp 10/28',
+                icon: Icons.credit_card,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton(
+          onPressed: onAddMethod,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppThemeData.brandPrimaryBlue,
+            side: const BorderSide(color: Color(0x5230588C)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+          child: const Text(
+            'Add New Payment Method',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class PaymentMethodCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String details;
+
+  const PaymentMethodCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.details,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: const Color(0x1430588C),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Icon(icon, color: AppThemeData.brandPrimaryBlue, size: 24),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                details,
+                style: TextStyle(fontSize: 13, color: AppThemeData.grey600),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// REWARDS SECTION
+class RewardsSection extends StatelessWidget {
+  const RewardsSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: const [
+            Expanded(
+              child: _RewardCard(
+                title: 'Cashback',
+                value: '₦ 1,250',
+                icon: Icons.local_offer_outlined,
+                backgroundColor: AppThemeData.brandPrimaryBlue,
+                textColor: Colors.white,
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: _RewardCard(
+                title: 'Referral',
+                value: '3 active invites',
+                icon: Icons.group_outlined,
+                backgroundColor: AppThemeData.grey100,
+                textColor: AppThemeData.brandMutedSteelBlue,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _RewardCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color backgroundColor;
+  final Color textColor;
+
+  const _RewardCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.backgroundColor,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 24, color: textColor),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// LEGAL LINK
+class LegalLinkWidget extends StatelessWidget {
+  final String title;
+  final VoidCallback onTap;
+
+  const LegalLinkWidget({super.key, required this.title, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppThemeData.grey100),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        title: Text(
+          title,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        ),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: AppThemeData.grey500,
+        ),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
+// LOGOUT BUTTON
+class LogoutButtonWidget extends StatelessWidget {
+  final VoidCallback onLogout;
+
+  const LogoutButtonWidget({super.key, required this.onLogout});
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onLogout,
+      icon: const Icon(Icons.logout, color: AppThemeData.danger300),
+      label: const Text(
+        'Logout',
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          color: AppThemeData.danger300,
+        ),
+      ),
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: AppThemeData.danger300),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+    );
+  }
+}
